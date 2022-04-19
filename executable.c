@@ -14,6 +14,42 @@
 #define windup_limit 0.3
 #define smoothing_factor 0.2
 
+void SimpleWindupScheme(pid* plant, float* integral_sum)
+{
+    if((*integral_sum) > fabsf(windup_limit))
+    {
+        (*integral_sum) = fabsf(windup_limit);
+    }
+
+    if((*integral_sum) < -fabsf(windup_limit))
+    {
+        (*integral_sum) = -fabsf(windup_limit);
+    }
+}
+
+void ComplementaryFilter(pid* plant, float* error)
+{
+    static float previous_filtered_error;
+
+    (*error) = (1-smoothing_factor)*previous_filtered_error + 
+        smoothing_factor * (*error);
+
+    previous_filtered_error = (*error);
+}
+
+void SimpleOutputClamp(pid* plant)
+{
+    if(*(plant->output) > output_max)
+    {
+        *(plant->output) = output_max;
+    }
+
+    if(*(plant->output) < output_min)
+    {
+        *(plant->output) = output_min;
+    }       
+}
+
 int main(int argc, char **argv)
 {
 
@@ -21,18 +57,20 @@ int main(int argc, char **argv)
     float reference = 5;
     float output;
 
-    struct pid plant;
-    pid_ pid;
+    pid plant;
+    pid* plant_t = &plant;
 
-    pid = make_pid_controller(&plant, &state, &output, &reference, 
-        kp, ki, kd, output_max, output_min, windup_limit, smoothing_factor);
+    make_pid_controller(plant_t, &state, &output, &reference, kp, ki, kd);
 
-    while(fabsf(pid->reference - pid->output) > 0.1)
+    while(fabsf(plant_t->reference - plant_t->output) > 0.1)
     {
-        pid_compute(pid);
-        *pid->state += *pid->output;
+        
+        pid_compute(plant_t, &SimpleWindupScheme, 
+            &ComplementaryFilter, &SimpleOutputClamp);
+        
+        *plant_t->state += *plant_t->output;
 
-        printf("%f \n", *(pid->state));
+        printf("%f \n", *(plant_t->state));
         fflush(stdout);
         sleep(1);
     }
