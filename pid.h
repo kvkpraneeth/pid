@@ -31,6 +31,7 @@ extern "C" {
     void pid_compute(pid* plant, 
         void (*AntiWindup)(pid*, float*), 
         void (*LowPassFilter)(pid*, float*),
+        float (*FeedForward)(pid*),
         void (*PlantLimits)(pid*)
     );
 

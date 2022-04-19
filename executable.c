@@ -7,6 +7,7 @@
 #define kp 0.5
 #define ki 0.01
 #define kd 0.1
+#define kf 0.01 //Feedforward Gain
 
 #define output_max 1
 #define output_min -1
@@ -50,6 +51,11 @@ void SimpleOutputClamp(pid* plant)
     }       
 }
 
+float SimpleFeedForward(pid* plant)
+{
+    return (*plant->reference)*kf;
+}
+
 int main(int argc, char **argv)
 {
 
@@ -65,8 +71,13 @@ int main(int argc, char **argv)
     while(fabsf(plant_t->reference - plant_t->output) > 0.1)
     {
         
-        pid_compute(plant_t, &SimpleWindupScheme, 
-            &ComplementaryFilter, &SimpleOutputClamp);
+        pid_compute(
+            plant_t, 
+            &SimpleWindupScheme, 
+            &ComplementaryFilter, 
+            &SimpleFeedForward,
+            &SimpleOutputClamp
+        );
         
         *plant_t->state += *plant_t->output;
 

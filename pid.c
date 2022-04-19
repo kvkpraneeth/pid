@@ -16,6 +16,7 @@ void make_pid_controller(pid* plant,
 void pid_compute(pid* plant, 
     void (*AntiWindup)(pid*, float*), 
     void (*LowPassFilter)(pid*, float*),
+    float (*FeedForward)(pid*),
     void (*PlantLimits)(pid*)
 )
 {
@@ -34,7 +35,7 @@ void pid_compute(pid* plant,
     (*LowPassFilter)(plant, &derivative_error);
 
     *(plant->output) = plant->kp*error + integral_sum + 
-        plant->kd * derivative_error;
+        plant->kd * derivative_error + (*FeedForward)(plant);
 
     (*PlantLimits)(plant);
 
