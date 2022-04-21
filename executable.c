@@ -51,9 +51,9 @@ void SimpleOutputClamp(pid* plant)
     }       
 }
 
-float SimpleFeedForward(pid* plant)
+void SimpleFeedForward(pid* plant)
 {
-    return (*plant->reference)*kf;
+    (*plant->output) += (kf*(*plant->reference));
 }
 
 int main(int argc, char **argv)

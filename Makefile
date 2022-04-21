@@ -1,5 +1,3 @@
-
-
 CC=gcc
 CFlags=-Wall -g
 Bins=libpid.o libpidtest
